@@ -1,0 +1,895 @@
+\documentclass[psamsfonts]{amsart}
+
+%-------Packages---------
+\usepackage{amssymb,amsfonts}
+\usepackage[all,arc]{xy}
+\usepackage{enumerate}
+\usepackage{mathrsfs}
+\usepackage{physics}
+\usepackage{amsmath}
+\usepackage{pst-solides3d}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{parskip}
+\usepackage[margin = 0.75in]{geometry}
+
+\pgfplotsset{compat=1.18}
+
+%--------Theorem Environments--------
+%theoremstyle{plain} --- default
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{conj}[thm]{Conjecture}
+\newtheorem{quest}[thm]{Question}
+
+\theoremstyle{definition}
+\newtheorem{defn}[thm]{Definition}
+\newtheorem{defns}[thm]{Definitions}
+\newtheorem{con}[thm]{Construction}
+\newtheorem{exmp}[thm]{Example}
+\newtheorem{exmps}[thm]{Examples}
+\newtheorem{notn}[thm]{Notation}
+\newtheorem{notns}[thm]{Notations}
+\newtheorem{addm}[thm]{Addendum}
+\newtheorem{exer}[thm]{Exercise}
+
+\theoremstyle{remark}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{rems}[thm]{Remarks}
+\newtheorem{warn}[thm]{Warning}
+\newtheorem{sch}[thm]{Scholium}
+
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\R}{\mathbb{R}}   % Real numbers
+\newcommand{\C}{\mathbb{C}}   % Complex numbers
+\newcommand{\Q}{\mathbb{Q}}   % Rational numbers
+\newcommand{\Z}{\mathbb{Z}}   % Integers
+\newcommand{\N}{\mathbb{N}}   % Natural numbers
+\newcommand{\FE}{\mathcal{F}}
+\newcommand{\gln}{\mathfrak{gl_n}}
+\newcommand{\g}{\mathfrak{g}}
+\newcommand{\h}{\mathfrak{h}}
+\newcommand{\sln}{\mathfrak{sl_n}}
+\newcommand{\uu}{\mathfrak{u}}
+\newcommand{\torus}{\begin{tikzpicture}[rotate=0]
+%Torus
+\draw (0,0) ellipse (1.6 and .9);
+%Hole
+\begin{scope}[scale=.8]
+\path[rounded corners=24pt] (-.9,0)--(0,.6)--(.9,0) (-.9,0)--(0,-.56)--(.9,0);
+\draw[rounded corners=28pt] (-1.1,.1)--(0,-.6)--(1.1,.1);
+\draw[rounded corners=24pt] (-.9,0)--(0,.6)--(.9,0);
+\end{scope}
+%Cut 1
+\draw[densely dashed] (0,-.9) arc (270:90:.2 and .365);
+\draw (0,-.9) arc (-90:90:.2 and .365);
+%Cut 2
+\draw (0,.9) arc (90:270:.2 and .348);
+\draw[densely dashed] (0,.9) arc (90:-90:.2 and .348);
+\end{tikzpicture}}
+
+\DeclareMathOperator*{\argmax}{argmax}    % Argmax, e.g. $\argmax_{x\in[0,1]} f(x)$
+\DeclareMathOperator*{\argmin}{argmin}    % Argmin, e.g. $\argmin_{x\in[0,1]} f(x)$
+\DeclareMathOperator*{\spann}{Span}       % Span, e.g. $\spann\{X_1,...,X_n\}$
+\DeclareMathOperator*{\bias}{Bias}        % Bias, e.g. $\bias(\hat\theta)$
+\DeclareMathOperator*{\ran}{ran}          % Range of an operator, e.g. $\ran(T) 
+\DeclareMathOperator*{\diag}{diag}  
+
+\makeatletter
+\let\c@equation\c@thm
+\makeatother
+\numberwithin{equation}{section}
+
+\bibliographystyle{plain}
+
+%--------Meta Data: Fill in your info------
+\title{A Not-So-Quick Detour into Lie Theory and Schur's Lemma}
+
+\author{Yousif Elhag}
+
+
+\begin{document}
+
+\maketitle
+
+\subsection*{Abstract}We provide exposition regarding the fundamentals concepts of Lie Theory and representations of Lie Algebras. Assuming some background in Linear Algebra, we provide motivated discussion towards Schur's Lemma and provide some applications of its power in other areas of study. 
+
+\section{Matrix Groups}
+
+We begin in introducing some of the basic language with which to introduce the topic of Lie groups and discuss some important examples. 
+
+\begin{defn}[Groups]
+A \emph{Group} is a set $G$, paired with a binary operation which acts as a mapping $G \times G \to G$. This operation is denoted by $(r,s) \mapsto r \cdot s$, satisfying the following properties:
+\begin{itemize}
+    \item \emph{Associativity.} For all $a,b,c \in G$, $(a \cdot b) \cdot c = a \cdot (b \cdot c)$.
+    \item \emph{Identity.} There exists $e \in G$ such that $e \cdot a = a \cdot e = a$ for all $a \in G$.
+    \item \emph{Inverse.} For all $a \in G$, there exists unique $a^{-1} \in G$ such that $a \cdot a^{-1} = a^{-1} \cdot a = e$
+\end{itemize} 
+\end{defn}
+
+\begin{defn}[Homomorphisms] 
+    Consider two groups, $G$ and $H$. A \emph{group homomorphism} is a map,  $\phi: G \to H$, that preserves structure between groups since:
+    \begin{gather}
+        \phi(0) = 0 \\ 
+        \phi(1) = 1 \\  
+       \text{Product preservation: } \phi(g) = \phi(1g) = \phi(1) \phi(g)
+       \\
+       \text{Inverse preservation: } 1 = \phi(1) = \phi(gg^{-1}) = \phi(g) \phi(g^{-1})
+    \end{gather}
+   Note here that $\phi(g^{-1}) = \phi(g)^{-1}$ because the inverse of $\phi(g)$ is unique.
+\end{defn}
+
+\begin{defn}[Isomorphism]
+Two groups $G, H$ are \emph{isomorphic} to each other, $G \cong H$, if there is a bijective homomorphism between them.
+\end{defn}
+
+Considering these definitions, we obtain that \textbf{Matrix Groups}, roughly speaking, are groups which are realized as invertible matrices. Similarly, \textbf{Linear Groups} are groups which are isomorphic to a matrix group.
+
+
+\begin{exmp}Some examples of matrix groups include:
+\begin{itemize}
+    \item[(a)] The General linear group, $GL_n(\R)$, of invertible $n \times n$ matrices.
+    \item[(b)] The Orthogonal group, $O_n(\R) \subset M_n(\R)$, is the subset of $n \times n$ matrices, $A$, such that $AA^\top = I$.
+    \item[(c)] The Unitary group, $U_n(\R) \subset M_n(\R)$, is the subset of $n \times n$ matrices, $B$, such that $BB^\ast = \Bar{BB^\top} = I$. 
+\end{itemize}
+\end{exmp}
+
+\section{Matrix Lie Groups}
+
+A Lie group is, roughly speaking, a \emph{continuous} group, whose parameters will be described shortly. For the sake of convenience, namely to avoid much of the abstract study of manifolds, such groups will be realized here only as groups of matrices. We'll begin in defining these notions of continuity for matrix groups and discuss the matrix Lie group.
+
+\begin{defn}[Convergence of Matrices]
+    Let $(A_m)_{m \in \N}$ be a sequence of elements of the set of matrices with complex entries, $M_n(\C)$. We say that $A_m$ converges to a matrix $M$ if each entry of $A_m$ converges as $m \to \infty$ to the corresponding entry of $M$. Essentially, this is to say $A_m$ converges to a matrix $M$ if
+    \[\lim_{m \to \infty} |(A_m)_{kl} - A_{kl} | = 0, \ \text{for all } 1 \leq k, l \leq n\]
+\end{defn}
+
+\begin{defn}[Matrix Lie Groups]
+    A \emph{matrix Lie group} is any subgroup, $G$, of $GL_n(\C)$ fulfilling the property that for a sequence of matrices $(A_m)_{m \in \N}$ in $G$, if $A_m$ converges to some matrix $M$, then either $M \in G$ or $M$ is not invertible.  
+\end{defn}
+\begin{rem}
+    This definition is equivalent to saying that $G$ is a \emph{closed} subset of $GL_n(\C)$.
+\end{rem}
+
+\begin{defn}[Linear Lie Groups]
+Recall that a linear group is any group isomorphic to a matrix group. Similarly, a \emph{linear Lie group} is any group isomorphic to a matrix Lie group.
+\end{defn}
+
+\subsection{Understanding Lie Groups}
+A proper understanding of matrix Lie groups and linear Lie groups hinges itself not only on getting a good sense of definitions, but also on familiarizing oneself with the relevant examples. We provide a handful:
+\par 
+\begin{exmp}[General linear Groups]
+    Consider the general linear group over $\C$, $GL_n(\C)$. If $A_m$ is a sequence of matrices in $GL_n(\C)$ which converges to a matrix, $M$, then $M$ is in $GL_n(\C)$ or $M$ is not invertible. Therefore, $GL_n(\C)$ is a matrix Lie group. 
+\end{exmp}
+ \begin{rem}
+For similar reasons, the general linear group over $\R$, $GL_n(\R)$, is a matrix Lie group. As are the special linear groups, $SL_n(\R)$, $SL_n(\C)$, since  the matrix it converges to must be in either group. This is because the convergent matrix must have $\det = 1$ since the determinant is a continuous function.
+ \end{rem}
+ 
+\begin{exmp}[Generalized Orthogonal Group]
+    Consider $\R^{n+k}$ and define a symmetric bilinear form on this Euclidean space given by
+    \[B_{n,k} : \R^{n+k} \times \R^{n+k} \to \R,\ \  B_{n,k}(x,y) = \sum_{i=0}^n x_iy_i - \sum_{j=n+1}^{n+k}x_jy_j\]
+    The set of $(n+k) \times (n+k)$ real matrices which preserve this form is the generalized orthogonal group over $\R$, $O_{n,k}(\R)$. It is a subgroup of $GL_{n+k}(\R)$ and is a matrix Lie group under matrix multiplication because, as can be quickly verified, this operation preserves the above symmetric bilinear form.
+\end{exmp}
+
+
+
+\begin{exmp}[Heisenberg Group]
+    The Heisenberg Group, $H$, is the set of all $3 \times 3$ matrices of the form 
+    \[A = \mqty(1 & a & b \\ 0 & 1 & c \\ 0 & 0 & 1), \ \ a,b,c \in \R\]
+
+    We can easily observe by taking $a = b = c = 0$ that $I \in H$ and $H$ is closed under matrix multiplication. Furthermore, we see by computing for $HH^{-1} = I$ that the inverses of $H$ take the form 
+    \[H^{-1} = \mqty( 1 & -a & ac-b \\ 0 & 1 & -c \\ 0 & 0 & 1 )\]
+    It is clear that the limits of matrices of $H$ goes to $H$ as well, so $H$ is a matrix Lie group.
+    \end{exmp}
+
+\begin{exmp}[SO(2)]
+Consider the rotational matrix: 
+\[R_\theta = \mqty( \cos \theta & - \sin \theta \\ \sin \theta & \cos \theta )\]
+    The group $\{ \R_\theta \mid \theta \in \R \} $ is called the special orthogonal group $SO(2)$ and refers to this rotational matrix having a determinant of $1$.  \par 
+    Another way this can be viewed is that each matrix element can be viewed as the matrix representation of the complex number $$e^{i \theta} = \cos \theta + i \sin \theta$$ Treating each element as an ordered pair $(\cos \theta, \sin \theta)$, we can view this group as having the structure of a unit circle in $\C$. 
+
+    \begin{center}
+    \begin{tikzpicture}[scale=0.8]
+    \begin{scope}[thick,font=\scriptsize]
+
+   \draw [->] (-3,0) -- (3,0) node [above left]  {$\Re\{z\}$};
+    \draw [->] (0,-3) -- (0,3) node [below right] {$\Im\{z\}$};
+    \draw (0,0) circle (1.5) node [above left] {$SO(2)$} ;
+    
+    \end{scope}
+    \end{tikzpicture}
+    \end{center}
+    
+    Thus $SO(2)$ has a geometric structure (as a circle) and a group structure (by complex multiplication). Additionally, we see that this is 'continuous' in accordance with our definition of matrix convergence, then $SO(2)$ is a Lie group.
+\end{exmp}
+
+
+
+\subsection{Topological Properties of Lie groups} We discuss 3 important topological properties which we discuss in the context of Lie groups, including connectedness and compactness.
+
+
+\begin{defn}[Connectedness]
+    For a subset $G \subset \C^n$ is \emph{connected} if for all $A,B \in G$, there is a continuous path $\gamma: [0,1] \to G$ such that $\gamma(0) = A$ and $\gamma(1) = B$ with $\gamma(t) \in G$ for all $t \in [0,1]$.
+\end{defn}
+
+\begin{defn}[Simple-Connectedness]
+A subset $G \subset \C^n$ is \emph{simply-connected} if it is connected and for every continuous "loop" of a path in $G$ can be shrunk continously to a single point. More precisely, given a continuous path $\gamma$ with $\gamma(0) = \gamma(1)$, there exists a continuous function $\Pi: [0,1]^2 \to G$ such that
+\begin{enumerate}
+    \item $\Pi(s,0) = \Pi(s,1)$ for all $s \in [0,1]$
+    \item $\Pi(0,t) = \gamma(t)$ for all $t \in [0,1]$
+    \item $\Pi(1,t) = \Pi(1,0)$ for all $t \in [0,1]$
+\end{enumerate}
+\end{defn}
+
+\begin{defn}[Compactness]
+    A matrix Lie group $G$ is compact if it is a closed and bounded subset of $M_n(\C)$. We say a Lie group is bounded if there exists a constant $C \in \R$ such that for all $M \in G$, entries $|M_{ij}| \leq C$ for all $1 \leq i,j \leq n$.
+\end{defn}
+
+\begin{exmp}
+    The group $U_n$ is connected. 
+    \begin{proof}
+        Since $U_n$ is unitary, then for $U \in U_n$ there is an orthonormal basis of eigenvectors with eigenvalues of an absolute value of $1$. Thus, for a unitary matrix $V \in U_n$, we can define a family $U(t)$ by
+        \[U(t) = V \mqty( e^{ti\theta_1} & \dots & 0 \\  \vdots & \ddots & \vdots \\ 0 & \dots & e^{ti\theta_n}) V^{-1}\]
+        where this has $U(0) = I$ and $U(1) = U$ and is a continuous path.
+    \end{proof}
+\end{exmp}
+\exmp Groups $O_n$, $SO(n)$, $U_n$, and $SU(n)$ are compact
+
+\exmp The path $SU(2)$ is simply connected.
+\begin{proof}
+    We view that $$SU(2) = \{ \mqty(\alpha & -\Bar{\beta} \\ \beta & \Bar{\alpha}) \mid \alpha,\beta \in \C, |\alpha|^2 + |\beta|^2 = 1 \}$$
+    We view that the determinant is computed by $|\alpha|^2 + |\beta|^2$ where this is equal to $1$. Furthermore, it can easily be viewed that $SU(2)$ is, topologically, the unit sphere $\mathbb{S}^3$ on $\C^2$ and is, therefore, simply connected.
+\end{proof}
+
+\newpage 
+
+
+\section{The Importance of Exponential Maps}
+
+Nice! Now we're ready to discuss some of the more interesting properties of our Lie groups. Utilizing our notions of matrix Lie groups, we'll investigate the notion of a Lie algebra and how this connects to Lie Groups. Namely, we aim to discuss the concept of exponential maps and its role in building connections between non-commuting objects such as matrices.
+
+\subsection{Exponential Maps} 
+Recall the power series expansions:
+\begin{gather*}
+    e^x = \sum_{i=0}^\infty \frac{x^n}{n!} = 1 + x + \frac{x^2}{2} + \dots  \\
+    \cos(x) = \sum_{i=0}^\infty \frac{(-1)^n x^{2n}}{(2n)!} = 1 - \frac{x^2}{2!} + \frac{x^4}{4!} - \dots \\
+    \sin(x) = \sum_{i=0}^\infty \frac{(-1)^n x^{2n+1}}{(2n+1)!} = x - \frac{x^3}{3!} + \frac{x^5}{5!} - \dots 
+    \end{gather*}
+    Notice that as these series are absolutely convergent for all $x$, we can take $x = i\theta$ so as to conclude $$e^{i\theta} = \cos(\theta) + i\sin(\theta)$$
+    where we view that the exponential function maps onto the unit disk, $\mathbb{S}^1$, which is a linear Lie group that is isomorphic to $SO(2)$. 
+    
+    Notice that these points mapped onto by the exponential function can be viewed as tangent to the line of points mapped onto by $1 + \R i$:
+
+\begin{center}
+    \begin{tikzpicture}[scale=0.8]
+    \begin{scope}[thick,font=\scriptsize]
+
+   \draw [->] (-3,0) -- (3,0) node [above left]  {$\Re\{z\}$};
+  \draw [->] (0,-3) -- (0,3) node [below right] {$\Im\{z\}$};
+
+  \draw (0,0) circle (1.5) node [above left] {$\mathbb{S}^1$} ;
+  \draw (1.5,-3) -- (1.5, 3) node [below right] {$1 + \R i$} ;
+
+\end{scope}
+\end{tikzpicture}
+\end{center}
+
+We can view this line, $1+ \R i$, as being the \textbf{tangent space} to the Lie group formed by $\mathbb{S}^1$. 
+
+\begin{defn}[Tangent Space]
+    The \emph{tangent space} of a matrix Lie group $G$ at a point $p$ in $G$ is the $n$-dimensional plane in $\R^{n^2}$ tangent to $G$ at $p$, which we call $T(G)$. We denote the tangent space at the identity by $L_G$.
+\end{defn}
+
+\begin{rem}
+    We want to think about computing the tangent space of a matrix Lie group in general. A good way that I like to think about it is to think of tangent vectors as a sort-of "velocity vector" to particular paths (smoothly moving points) in our Lie groups.
+\end{rem}
+\begin{lem}
+    Product rule for matrix functions.
+    \begin{proof}
+    Let $A,B: \R \to GL_n(\C)$ be $C^\infty$ functions such that for $t \in \R$:
+    \[A(t) \cdot B(t) = \sum_{k=1}^n a_{ik}(t) b_{kj}(t)\]
+    where $a_{ij}(t)$, $b_{ij}(t)$ denote entries in $A(t)$ and $B(t)$ respectively. From this sum, the derivative of $A \cdot B$ can be taken as
+    \begin{gather*}
+        (A(t) \cdot B(t))' = \sum_{k=1}^n (a_{ik}(t) \cdot b_{kj}(t))' = \sum_{k=1}^n a_{ik}(t)b'_{kj}(t) + \sum_{k=1}^n a'_{ik}(t)b_{kj}(t) \\ 
+        = A(t)B'(t) + A'(t)B(t) 
+    \end{gather*}
+    Hence, $(A(t) \cdot B(t))' = A(t)B'(t) + A'(t)B(t)$.
+    \end{proof}
+    \end{lem}
+    
+\begin{exmp}
+    Let $SU(n)$ denote the set of all unitary $n \times n$ matrices with determinant $1$. Here, $SU(n)$ is a matrix Lie group as it is a closed sub-group of $GL_n(\C)$. \par 
+    Allow $\phi: \R \to SU(n)$ to be a smooth ($C^\infty$) matrix-valued function such that for $t \in \R$ 
+    \[\phi(t) \phi(t)^\ast =  I_n = \phi(0)\]
+    where $\phi(t)^\ast$ represents the complex conjugate of $\phi(t).$ By Lemma 3.2, we can express for the result above that:
+    \[\phi(t) \cdot \phi'(t)^\ast + \phi'(t) \cdot \phi(t)^\ast = 0_n\]
+    where, taking $t = 0$, it then follows that 
+    \[\phi'(0) + \phi'(0)^\ast = 0_n\]
+    Now, let $\mathcal{F}$ to denote the set of matrice of the form $\phi'(0)$ that satisfy $\phi'(0) + \phi'(0)^\ast = 0_n$, where this is the set of $n \times n$ skew-Hermitian matrices with a trace of $0$. Here, the \textbf{tangent space} of the identity of $SU(n)$ is a subspace of $\mathcal{F}$. We will later reveal that $\mathcal{F}$ and the tangent space of $SU(n)$ are, in fact, the same space.
+    \end{exmp}
+
+  \subsection{The Exponential Map}
+The exponential of a matrix plays a critical role in the study in the theory of Lie groups. The exponential inserts itself as a mechanism for passing informations from the Lie algebra to the Lie groups and, as we'll later see, is implicitly part of the definition of a Lie algebra.
+
+\begin{defn}[Exponential of $X$]
+
+If $X$ is an $n \times n$ matrix, we define the exponential of $X$, denoted by $\exp X$, by the absolutely convergent power series 
+\[\exp X = \sum_{n = 0}^\infty \frac{X^n}{n!}\]
+where $X^n$ denotes repeated matrix multiplication of $X$ with itself.
+\end{defn}
+
+\begin{defn}[Hilbert-Schmidt Norm]
+For any $n \times n$ matrix $X \in M_n(\C)$, we define
+\[\|X\| = \sqrt{\sum_{j,k=1}^n \bigl|X_{jk}\bigr|^2}\]
+with properties:\ $\|XY\| \leq \|X\| \|Y\|$ and $\|X + Y\| \leq \|X\| + \|Y\|$.
+\end{defn}
+\begin{rem}
+    Note that the Hilber-Schimdt Norm can also be computed in a basis-independent manner by 
+    \[\norm{X} = \sqrt{\Tr (X^\ast X)}\]
+\end{rem}
+
+\begin{prop}
+For $n \times n$ matrices $X,\ Y$, we retrieve the following properties of the exponential map:
+\begin{enumerate}
+    \item $\exp (0_n) = I_n$.
+    \item $\exp(X)^\ast = \exp(X^\ast)$.
+    \item $\exp$ is an invertible map and $\exp(X)^{-1} = \exp(-X)$.
+    \item For $\alpha,\beta \in \C$, $\exp((\alpha + \beta)X) = \exp(\alpha X) \cdot \exp(\beta X)$
+    \item $\exp(X+Y) = \exp(X) \exp(Y) = \exp(Y) \exp(X)$
+\end{enumerate}
+\begin{proof}
+    Facts (1) - (4) come from term-by-term manipulations of the power series representations of $\exp(X)$ and $\exp(Y)$. As for fact (5), this follows from the fact that $\exp$ is an absolutely convergent map, so we can multiply $\exp(X) \cdot \exp(Y)$ and collect terms in the series-expansion where the powers of $X$ added to $Y$ equals $n$.
+\end{proof}
+\end{prop}
+
+\begin{rem}
+    Although $\exp(X+Y) = \exp(X) \cdot \exp(Y)$ when $X$ and $Y$ commute, this identity fails in general. We'll later see this in discussions of the Baker-Campell-Hausdorff Formula.
+\end{rem}
+
+\begin{prop}
+    Let $X$ can an $n \times n$ matrix with entries in $\C$, ie. $X \in M_n(\C)$. If so, then $\exp(tX)$ is a smooth curve in $M_n(\C)$ and 
+    \[\dv{}{t} \exp(tX) = X \cdot \exp(tX) = \exp(tX) \cdot X\]
+
+    \begin{proof}
+        Differentiating the power series of $\exp(tX)$ term-by-term, we can easily verify this to be true.
+    \end{proof}
+\end{prop}
+
+\begin{defn}
+    For an $n \times n$ matrix $X$, we define $\log X$ by
+    \[\log X = \sum_{n=1}^\infty (-1)^{n+1} \frac{(X-I)^n}{n}\]
+    whenever the series converges. This function has a radius of convergence 1.
+\end{defn}
+
+\begin{lem}
+The function $\log X$ is defined and continuous on the set of all $n \times n$ matrices with $\norm{X - I} \leq 1$ and for all $X$ such that $\norm{X - I} \leq 1$, then $\exp(\log X) = X$.
+\end{lem}
+\begin{proof}
+    As $\norm{(X-I)^n} \leq \norm{X-I}^n$ and $\log X$ has radius of convergence $1$, then the series of (3.10) converges absolutely for all $X$ with $\norm{X-I} \leq 1$.
+    \par
+    Now, suppose that $X$ satisfies this condition. If $X$ is diagonalizable with eigenvalues $\lambda_1$, $\dots$, $\lambda_n$, then by the Spectral Theorem, we can express $X$ in the form $ABA^{-1}$ with diagonal $B$, meaning
+    \[(X-I)^n = A \mqty( (\lambda_1 - 1)^n & \dots & 0  \\ \vdots & \ddots& \vdots \\ 0 & \dots & (\lambda_n - 1)^n ) A^{-1} \]
+    Notice that because $\|X - I \| \leq 1$ then each eigenvalue representing $(X-I)^n$ must satisfy $|\lambda_i - 1 | < 1$. Therefore, 
+    \[\sum_{n=1}^\infty (-1)^{n+1} \frac{(X-I)^n}{n} = A \mqty( \log \lambda_1 & \dots & 0  \\ \vdots & \ddots& \vdots \\ 0 & \dots & \log \lambda_n ) A^{-1}\]
+    where we observe that 
+    $$\exp(\log X) = A \mqty( \exp(\log \lambda_1) & \dots & 0  \\ \vdots & \ddots& \vdots \\ 0 & \dots & \exp(\log \lambda_n) ) A^{-1} = X $$
+    If $X$ weren't diagonalizable, then by approximating $X$ by a sequence of diagonalizable matrices, $X_m$, and appealing to the continuity expressed by functions $\exp$ and $\log$, we retrieve that $\exp(\log X) = X$ for all $\|X - I \| \leq 1$.
+\end{proof}
+
+\begin{thm}
+Every invertible $n \times n$ matrix $X$ can be expressed as $\exp(X)$ for some $X \in GL_n(\C)$.
+\begin{proof}
+    For the sake of convenience, we omit this proof as it requires content covered into the scope of multi-linear algebra.
+\end{proof}
+
+\begin{exmp}
+    Recall (3.3) for which we noted the tangent space of $SU(n)$ is a subspace of $\mathcal{F}$. Using our cultivated tools of $\exp$ and $\log$, we proceed in showing $\mathcal{F} = SU(n)$.
+
+        \lem For an $n \times n$ matrix $M \in \mathcal{F}$, $\exp(tM)\exp(tM)^\ast = I_n$.
+\begin{proof}
+    Taking $\exp(tM)\exp(tM)^\ast$, we see that 
+    \begin{gather*}
+        \exp(tM)\exp(tM)^\ast = \exp(tM)\exp(tM^\ast)  =
+        \exp(tM)\exp(-tM) \\ = \exp(tM - tM)  = \exp(0) 
+        = I_n \qedhere
+    \end{gather*} \end{proof}
+
+    \lem For $M \in \mathcal{F}$, $\det(\exp(tM)) = 1$.
+    \begin{proof}
+        Note that, by the Spectral Theorem, we can express $M = LCL^{-1}$ where $L$ is an invertible matrix and $C$ is diagonal. Then,
+        \[\exp(M) = \exp(LCL^{-1}) = \sum_{n=0}^\infty \frac{(LCL^{-1})^k}{k!} = \sum_{n=0}^\infty \frac{LC^k L^{-1}}{k!} = L\exp(C^{-1})L^{-1}\]
+        Then, taking $\lambda_i$ to be the diagonal entries in $C$, we view that
+       \begin{gather*}
+           \det(LCL^{-1}) = \det(L)\det(\exp(C)) \det(L^{-1}) = \det(\exp(C)) \\
+           = \prod_{i=0}^n \exp(\lambda_i) = \exp(\sum_{i=0}^n \lambda_i) = \exp(\Tr(C)) 
+       \end{gather*}
+       Noting that $C$ has $Tr = 0$ then $\det(M) = 1$, meaning that, similarly, $\det(tM) = 1$ as desired.
+    \end{proof}
+    Together, (3.14) and (3.15) demonstrate that $\mathcal{F}$ is a subspace of $\mathfrak{su}(n)$, the tangent space of $SU(n)$ at the identity. Hence, combined with (3.3), $\mathfrak{su}(n) = \mathcal{F}$, ie. the tangent space of $SU(n)$ is $\mathcal{F}$.
+
+
+
+\end{exmp}
+
+\end{thm}
+
+
+\subsection{Some more properties of the Exponential}
+Now, we proceed into discussion of some further properties of the exponential. These will be indispensible in our study of Lie Algebras.
+
+\begin{lem}
+    There exists a constant $c$ such that for all $M \in M_n(\C)$ with \\ $\norm{M} \leq \frac{1}{2}$, we have $$\|\log(I+B) - B \| \leq c \|B\|^2$$
+
+    \begin{proof}
+        Computing $\log(I+B) - B$, we view that
+        \begin{gather*}
+            \log(I+B) - B = \sum_{m=2}^\infty (-1)^{m+1} \frac{B^m}{m} = B^2 \sum_{m=2}^\infty (-1)^{m+1} \frac{B^{m-2}}{m} 
+        \end{gather*}
+        Observe that because $\|B\| \leq \frac{1}{2}$, we retrieve the inequality
+        \[\|\log(I+B) - B \| \leq \norm{B}^2 \sum_{m=2}^\infty \frac{(1/2)^{m-2}}{m}\]
+        where $\sum_{m=2}^\infty \frac{(1/2)^{m-2}}{m}$ is convergent, so we are done.
+    \end{proof}
+\end{lem}
+
+
+\begin{thm}[Lie Product Formula]
+    For all $X,Y \in M_n(\C)$, we have 
+    \[\exp(X+Y) = \lim_{m\to \infty} \biggl( \exp\bigl( \frac{X}{m} \bigr) \exp\bigl( \frac{Y}{m} \bigr) \biggr)\]
+\end{thm}
+\begin{proof}
+    Multiplying the series of $\exp(X/m)$ and $\exp(Y/m)$ we get that 
+    \[\exp\bigl( \frac{X}{m} \bigr) \exp\bigl( \frac{Y}{m} \bigr) =  I + \frac{X}{m} + \frac{Y}{m} + O(\frac{1}{m^2})\]
+    where $\frac{X}{m}$ and $\frac{Y}{m}$ are in the domain of the logarithm for sufficiently large $m$. Thus $\exp\bigl( \frac{X}{m} \bigr) \exp\bigl( \frac{Y}{m} \bigr) \to I$ as $m \to \infty$, so, by (3.16), we have
+    \begin{gather*}
+        \log(\exp\bigl( \frac{X}{m} \bigr) \exp\bigl( \frac{Y}{m} \bigr)) = \log(I + \frac{X}{m} + \frac{Y}{m} + O(\frac{1}{m^2})) \\
+        = \frac{X}{m} + \frac{Y}{m} + O\biggl(\norm{\frac{X}{m} + \frac{Y}{m} + O(\frac{1}{m^2})}^2\biggr) = \frac{X}{m} + \frac{Y}{m} + O(\frac{1}{m^2}) \\
+        \text{where by exponentiating and raising to the power of $m$, this gives us} \\
+        (\exp(\frac{X}{m}) \exp(\frac{Y}{m}))^m = \exp(X + Y + O(\frac{1}{m}))
+    \end{gather*}
+    Hence, because $\exp$ is a continuous function, we have 
+    \[\lim_{m \to \infty} ( \exp(\frac{X}{m} \exp(\frac{Y}{m})))^m = \exp (X+Y) \qedhere \]
+\end{proof}
+
+
+ \begin{defn}[One-parameter subgroups]
+        A \emph{one-parameter subgroup} of \\ $GL_n(\C)$ is a function $\gamma: \R \to GL_n(\C)$ such that:
+        \begin{itemize}
+            \item $\gamma$ is continous.
+            \item $\gamma(0) = I$.
+            \item $\gamma(t+s) = \gamma(t) \gamma(s)$ for all $t,s \in \R$.
+        \end{itemize}
+    \end{defn}
+
+    \begin{lem}
+        Note that for a one-parameter subgroup of $GL_n(\C)$, $\gamma$, there exists a unique $n \times n$ matrix, $M$, such that $\gamma(t) = \exp(tM)$.
+    \end{lem}
+    \begin{proof}
+        This follows from the fact that $\gamma$ is differentiable. This unique matrix can be recovered from $\gamma$ as 
+        \[\eval{\dv{\gamma(t)}{t}}_{t=0} = \eval{\dv{}{t}}_{t=0} \exp(tM) = \eval{M\exp(tM)}_{t=0} = M\exp(0) = M \qedhere \]
+    \end{proof}
+
+
+
+
+
+
+
+    \section{Lie Algebras}
+We now arrive at our study of Lie Algebras. To begin, we'll discuss the interesting structure of a tangent space, namely that it is a Lie algebra reflecting the structure of an associated Lie group. However, to show this, we must first define the Lie bracket and the axioms of a Lie algebra, in addition to providing further discussion of the tangent space.
+
+\begin{prop}[Tangent Space of $GL_n(\C)$]
+The tangent space of $GL_n(\C)$ is $M_n(\C)$.
+\end{prop}
+\begin{proof}
+    The tangent space of $GL_n(\C)$ must be contained in $M_n(\C)$ by definition. Additionally, note that for $X \in M_n(\C)$, there is a one-parameter subgroup such that for $t\in \R$, $\gamma(t) = \exp(tX)$, which acts a 'path' in $GL_n(\C)$ with tangent vector $X$. Hence, the tangent space of $GL_n(\C)$ is all of $M_n(\C)$. \end{proof}
+
+
+
+
+
+\begin{prop}
+    For any matrix Lie group, $G$, its tangent space, $T(G)$, is a real vector space.
+\end{prop}
+\begin{proof}
+    Suppose $X,Y \in T(G)$. If so, then there exists 'paths' $\gamma_1(t)$, $\gamma_2(t) \in G$ such that
+    \[ \gamma_1(0) = \gamma_2(0) = 1 \ \And \  \gamma_1'(0) = X, \gamma_2'(0) = Y\]
+    Then taking $\varphi(t) = \gamma_1(t)\gamma_2(t)$, we see that it is also a path such that $\varphi(0) = 1$. Thus for $\varphi'(0) \in T(G)$
+    \[\varphi'(0) = \eval{\dv{}{t}}_{t=0} \gamma_1(t)\gamma_2(t) = \gamma_1'(0)\gamma_2(0) + \gamma_1(0)\gamma_2'(0) = X+Y\]
+    meaning that $X+Y \in T(G)$ and the tangent space is closed under vector addition.
+    \par 
+    Now, let $r \in \R$, then taking $\phi(t) = \gamma_1(rt)$, we view that it is a smooth path in $G$ with $\phi(t) = \gamma_1(0) = 1$, so taking $\phi'(0)$, we see that
+    \[\phi'(0) = r\gamma_1(0) = rX\]
+    so $rX \in T(G)$. Hence, $T(G)$ is closed under scalar multiplication \& is a real vector space.
+\end{proof}
+\begin{defn}[Lie Algebra]
+    A finite-dimensional Lie algebra is a finite-dimensional vector space, $\mathfrak g$, together with a bilinear map $[\cdot, \cdot]: \mathfrak{g} \times \mathfrak{g} \to \mathfrak{g}$ with the following properties:
+    \begin{itemize}
+        \item $[\cdot, \cdot]$ is skew-symmetric: $[X,Y] = -[Y,X]$ for all $x,y \in \mathfrak{g}$.
+        \item For all $X,Y,Z \in \mathfrak{g}$, the \textbf{Jacobi Identity} holds:
+        \[[X,[Y,Z]] + [Y,[Z,X]] = [Z,[X,Y]] = 0\]
+    \end{itemize}
+\end{defn}
+
+\begin{rem}
+    Two elements, $X$ and $Y$, of a Lie algebra commute if $[X,Y] = 0$. A Lie Algebra, $\mathfrak{g}$, is commutative if $[X,Y] = 0$ for all $X,Y \in \mathfrak{g}$.
+\end{rem}
+
+\begin{prop}
+For any Lie group, $G$, the tangent space $T(G)$ is closed under the Lie bracket, $[\cdot, \cdot]$.
+\end{prop}
+\begin{proof}
+    Suppose $X,Y \in T(G)$. If so, then there exists paths $\gamma_1(t)$, $\gamma_2(t)$ in $G$ with $\gamma_1(0) = \gamma_2(0) = 1$ and $\gamma_1'(0) = X$, $\gamma_2'(0) = Y$. For some fixed $r \in \R$, consider path 
+    \[\phi_r(t) = \gamma_1(r) \gamma_2(t) \gamma_1(r)^{-1}\]
+    where it can be easily verified that $\phi_r(t)$ is smooth and $\phi_r(0) = 1$. Now, taking $\phi_r'(0) \in T(G)$, observe that 
+    \[\phi_r'(0) = \gamma_1(s) \gamma_2'(0) \gamma_1(s)^{-1} = \gamma_1(s) Y \gamma_1(s)^{-1}\]
+    Therefore $\phi_r$ is a smooth function of $r$ since $\gamma_1(s)$ is. As this is the case, $\phi(s) = \gamma_1(s)Y \gamma_1(s)^{-1}$ defines a smooth path in $T(G)$, so its tangent vector at $s=0$ must lie in $T(G)$. Hence,
+    \[\phi'(0) = \gamma_1'(0)Y\gamma_1(0)^{-1} + \gamma_1(0)Y(-\gamma_1(0)) = XY - YX = [X,Y]\]
+    where this shows that $[X,Y] \in T(G)$ as desired.
+\end{proof}
+
+\begin{defn}[Lie algebra of a Lie group] The Lie algebra $\g$ of a Lie group $G$ is the tangent space $T(G)$ with the Lie bracket $[\cdot, \cdot]$ where $[X,Y] = XY - YX$.
+\end{defn}
+
+\begin{rem}
+    An equivalent definition would state that the Lie algebra of a Lie group, $\g$, is the set of all matrices $X$ so that $\exp(tX)$ is in $G$ for all $t \in \R$.
+\end{rem}
+
+\begin{exmp}
+Although we won't take the time to verify that each of these are indeed the Lie algebra of each Lie group, we provide a few examples
+\begin{itemize}
+    \item $\gln (\R) = M_n(\R)$
+    \item $\sln(\R) = \{ X \in M_n(\R) \mid \Tr X = 0 \}$, $\sln(\C)= \{X \in M_n(\C) \mid \Tr X = 0 \}$
+    \item $\mathfrak{o}_n = \mathfrak{so}_n = \{ X \in M_n(\R) \mid X + X^\top = 0 \}$
+\end{itemize}
+\end{exmp}
+
+\begin{exmp}
+    The Lie algebra of the Heisenberg Group $H$ is the space of all matrices of the form 
+    \[X = \mqty( 0 & a & b \\ 0 & 0 & c \\ 0& 0& 0)\]
+    with $a,b,c \in \R$.
+\end{exmp}
+
+\begin{prop}
+    Let $G$ be a matrix Lie group and $\g$ be its Lie algebra. Then for $X \in \g$, $\exp(X)$ is an element of the identity component $G_0$ of $G$.
+\end{prop}
+
+\begin{proof}
+    By the definition of a Lie algebra of a Lie group, $\exp(tX)$ lies in $G$ for all $t \in \R$, indicating $\exp(tX)$ is a continuous path connecting to the identity of $\exp(X)$.
+\end{proof}
+
+\begin{defn}
+    Let $X,Y \in \g$ of Lie group $G$. If so, then the following results hold:
+    \begin{itemize}
+        \item $AXA^{-1} \in \g$ for all $A \in G$
+        \item $tX \in \g$ for all$ \ t \in \R$ 
+        \item For all $X,Y \in \g$, $X + Y \in \g$
+    \end{itemize}
+\end{defn}
+
+\subsection{The Language of Lie Algebras} In the interest of setting up the language to describe relationships between Lie algebras of Lie groups, we set up many of the preliminary definitions required in order to do so.
+\begin{defn}[Subalgebra ]
+    A \emph{subalgebra} of a Lie algebra $\g$ is a subspace $\h$ of $\g$ such that $[h_1, h_2] \in \h$ for all $h_1, h_2 \in \h$. If $\g$ is a complex Lie algebra and $\h$ is a real subspace of $\g$ then $\h$ is said to be a \emph{real subalgebra} of $\g$.
+\end{defn}
+
+\begin{defn}[Ideals]
+A subalgebra $\h$ of a Lie algebra $\g$ is said to be an ideal of $\g$ if $[X,H] \in \h$ for all $X \in \g$ and all $H \in \h$.
+\end{defn}
+
+\begin{defn}[Centers]
+The center of a Lie algebra is the set of all matrices $X \in \g$ for which $[X,Y] = 0$ for all $Y \in \g$.
+\end{defn}
+
+\begin{defn}[Adjoint Map]
+    For an element $X$ in Lie algebra $\g$, the \emph{adjoint map} is defined by the linear map
+    \[ad_X: \g \to \g, \ \ ad_X(Y) = [X,Y]\]
+\end{defn}
+
+\begin{rem}
+    Similarly, let $G$ be a matrix Lie group with Lie algebra $\g$. Then, for each $A \in G$, we can define the adjoint map of this Lie group by $ad_A: \g \to \g$ with $ad_A(X) = AXA^{-1}$
+\end{rem}
+
+\begin{defn}[Lie algebra homomorphisms]
+    If $\g$ and $\h$ and Lie algebras, then a linear map $\phi: \g \to \h $ is called a \emph{Lie algebra homomorphism} if $\phi([X,Y]) = [\phi(X), \phi(Y)]$ for all $X,Y \in \g$. If this map is bijective, it is a Lie algebra isomorphism.
+\end{defn}
+
+\begin{defn}[Direct Sum]
+    If $\g_1$ and $\g_2$ are Lie algebras, the \emph{direct sum} of $\g_1$ and $\g_2$ is the bracket given by:
+    \[[(X_1,X_2),(Y_1,Y_2)] = ([X_1,Y_1], [X_2,Y_2])\]
+    Note that if $\g_1$ and $\g_2$ are subalgebras of $\g$, then we say $\g$ decomposes as the Lie algebra direct sum of $\g_1$ and $g_2$ if $\g$ is the direct sum of $\g_1$ and $\g_2$ as vector spaces and $[X_1, X_2] = 0$ for all $X_1 \in \g_1$ and all $x_2 \in g_2$.
+\end{defn}
+
+
+\subsection{Lie Algebra Homomorphisms \& Connections} Lie algebra homomorphisms, as we'll find out, give a natural way for mappings to arise between associated Lie algebras \& are immensely useful in discussions of their corresponding Lie groups.
+
+\begin{prop}
+    If $\g$ is a Lie algebra, then $ad_{[X,Y]} = ad_Xad_Y - ad_Yad_X = [ad_X, ad_Y]$, which is to say, \\
+    $ad: \g \to End(\g)$ is a Lie algebra homomorphism.
+\end{prop}
+\begin{proof}
+    By the Jacobi Identity, observe that for $X,Y,Z \in \g$,  
+    \[ad_{[X,Y]} = [[X,Y],Z] = [X,[Y,Z]] - [Y,[X,Z]] = [ad_X, ad_Y](Z)\]
+    Thus, $ad: \g \to End(\g)$ is a Lie algebra homomorphism.
+\end{proof}
+
+\begin{rem}
+    In algebra, $End$ denotes an endomorphism, which is a homomorphism from one object to itself. This is to say that an endomorphism is effectively a non-isomorphic homomorphism to the same group.
+\end{rem}
+
+\begin{thm}
+    Let $G$ and $H$ be matrix Lie groups with Lie algebras $\g$ and $\h$ respectively and suppose that there is a group homomorphism $\varphi: G \to H$. If so, then there is a unique linear map $\phi: \g \to \h$ such that \\ $\varphi(\exp(X)) = \exp(\phi(X))$ for all $X \in \g$. This map has the properties that 
+    \begin{gather}
+        \phi(AXA^{-1}) = \varphi(A)\phi(X)\varphi(A^{-1}) \ \text{for all $X \in \g$, $A \in G$}
+        \\
+        \phi([X,Y]) = [\phi(X), \phi(Y)], \ \text{for all $X,Y \in \g$}
+        \\
+        \phi(X) = \eval{\dv{}{t}\varphi(\exp(tX)) }_{t = 0}, \ \text{for all $X \in \g$}
+    \end{gather}
+\end{thm}
+\begin{proof}
+    Since $\varphi$ is a continuous group homomorphism, then $\varphi(\exp(tX))$ will define a one-parameter subgroup of $H$ for each $X \in \g$. Then, by Lemma 3.20, there is a unique $n \times n$ matrix, $M$, such that $\varphi(\exp(tX)) = \exp(tM)$. As this is the case, then for all $s \in \R$, WLOG, $\varphi(\exp(tsX)) = \exp(tsM)$, showing that $\phi(sX) = s\phi(X)$. \par Now, using the Lie product formula, we're able to compute
+    \[\exp(t\phi(X+Y)) = \lim_{m \to \infty} (\varphi(\exp(\frac{tX}{m})) \varphi(\exp(\frac{tY}{m})))^m = \exp(t(\phi(X) + \phi(Y)))\]
+    Setting $t = 0$ before differentiating shows that $\phi(X+Y) = \phi(X) + \phi(Y)$. Hence, we retrieve a linear-map of our desired form. Verification of properties (4.21) - (4.23) follows quickly from Definition 4.11.
+\end{proof}
+
+\begin{defn}[Connected Lie group]
+Suppose $G$ is a matrix Lie group with Lie algebra $\g$. We say that $G$ is a \emph{connected matrix Lie group} if every element $A \in G$ can be expressed in the form 
+\[A = \exp(X_1) \cdot \exp(X_2) \cdot \dots \cdot \exp(X_n)\]
+for some $X_1, \dots X_n \in \g$.
+\end{defn}
+
+\begin{rem}
+    Say that $G$ is connected in the sense of definition 2.10 (meaning $G$ is path connected), we're really saying $G$ is connected in the topological sense of having no trivial sets that are both open and closed. This allows us to define $G$ in terms of the product of exponentials of elements in $\g$.
+\end{rem}
+
+\begin{defn}[Simply-Connected Lie group]
+Since matrix Lie groups are closed subsets of $GL_n(\C) \subset M_n(\C)$, they can thus be viewed as subsets of $\C^{n^2}$ and we apply Definition (2.11) over these subsets to determine simply-connectedness.
+\end{defn}
+
+\begin{prop}
+    Suppose $G_1$ and $G_2$ are matrix Lie groups with Lie algebras $\g_1$ and $\g_2$ respectively. Say that $\phi_1: G_1 \to G_2$  and $\phi_2: G_1 \to G_2$ are Lie group homomorphisms with associated Lie algebra homomorphisms $\varphi_1$, $\varphi_2$ respectively. If $G_1$ is connected and $\varphi_1 = \varphi_2$ then $\phi_1 = \phi_2$.
+\end{prop}
+\begin{proof}
+    This result immediately follows from Definition 4.25 and condition $\phi(\exp(X)) = \exp(\varphi(X))$.
+\end{proof}
+
+\begin{lem}
+    Suppose that $G_1$ and $G_2$ are matrix Lie groups with Lie algebras $\g_1$ and $\g_2$ respectively. If $G_1$ and $G_2$ are both connected and simply-connected with $\g_1$ isomorphic to $ \g_2$, then $G_1$ is isomorphic to $G_2$.
+\end{lem}
+
+\begin{proof}
+    Suppose there is a Lie algebra isomorphism $\phi: \g_1 \to \g_2$. As $G_1$ and $G_2$ are both connected and simply-connected, there exists a Lie group homomorphism $\rho: G_1 \to G_2$ related in the usual sense to $\phi$ by (4.21). Since $\phi^{-1}: \g_2 \to \g_1$ is a Lie algebra homomorphism, there exists a corresponding Lie group homomorphism $\psi: G_2 \to G_1$. Now, observe that the Lie algebra associated with $\psi \circ \rho$ is $\phi^{-1} \circ \phi = I$ by (4.21) once more. As such, then by (4.28) $\psi \circ \rho = I$. Analogous argument establishes $\rho \circ \psi = I$. Hence, there is an isomorphism between $G_1$ and $G_2$.
+\end{proof}
+
+
+\begin{exmp}
+    The lie algebras $\mathfrak{su}(2)$ and $\mathfrak{so}(3)$ are isomorphic, while their Lie groups $SU(2)$ and $SO(3)$ are not.
+
+\par 
+This should be fairly straight-forward to verify. Because Lie group $SU(2)$ is simply connected, then $SO(3)$ must fail to be simply connected. This can be verified since $SO(3) \cong \mathbb{S}^3$ whereas $SU(2) \cong \mathbb{S}^3/\Z/2$.
+\par 
+However, the Lie algebra $\mathfrak{su}(2)$ of $SU(2)$ is the space of skew-symmetric $2 \times 2$ self-adjoint matrices, ie. 
+\[\mathfrak{su}(2) = \{\mqty(ia & b + ci \\ ci - b & -ai) \mid a,b,c \in \R \}\]
+whereas
+\[\mathfrak{so}(3) = \{ \mqty( 0 & a & b \\ -a & 0 & c \\ -b & -c & 0) \mid a,b,c \in \R \}\]
+direct computation shows that the basis elements of $\mathfrak{su}(2)$ satisfy the same relations as those of $\mathfrak{so}(3)$, so their lie algebras are isomorphic.
+\end{exmp}
+
+
+\begin{defn}[Universal Covers]
+    Suppose $G$ is a connected Lie group with Lie algebra $\g$. A \emph{universal cover} of $G$ is an ordered pair $(H, \phi)$ consisting of a simply connected Lie group $H$ and a Lie group homomorphism $\phi: H \to G$ such that the associated Lie algebra homomorphism $\varphi: \h \to \g$ is an isomorphism of the Lie algebra $\h$ of $H$ with $\g$. The map $\phi$ is a \emph{covering map} of $G$.
+\end{defn}
+
+\begin{thm}
+    Every finite-dimensional real Lie group is isomorphic to the Lie algebra of some Lie group.
+\end{thm}
+\begin{proof}
+    Due to the amount of machinery required of this proof, we omit many details and provide only a sketch of the proof. By Ado-Iwasawa's Theorem, every finite-dimensional real Lie algebra is isomorphic to a subalgebra of $\gln(\R)$. It is then implied that there is a lie group containing this subalgebra since the connected subgroup of a Lie group has an inclusion map which is a Lie group homomorphism. This proves our statement.
+\end{proof}
+
+\section{Finite-Representations of Lie Groups \& Algebras}
+Now that we have learned the structure of Lie groups themselves, let us delve into perhaps the most interesting aspect of structures, their \emph{representations}. We can think of "representations" as a linear map on a vector space. The etymology of this term comes from this interpretation that each element of $G$ is "represented" by a linear map on a vector space. We expand on this notion below:
+
+
+\begin{defn}[Representations of Lie groups]
+    Let $G$ be a matrix Lie group. A finite-dimensional real or complex representation is a Lie group homomorphism of $G$ into $GL(V)$, where $GL(V)$ denotes the group of linear transformations on some vector space $V$, $\pi: G \to GL(V)$.
+    \end{defn}
+
+\begin{defn}[Representations of Lie algebras]
+If $\g$ is a real or complex Lie algebra, then a finite-dimensional representation of $\g$ is a homomorphism $\Pi: \g \to gl(V)$, where $gl(V)$ denotes the space of all linear transformations of $V$ equipped with bracket $[X,Y] := XY - YX$.
+\end{defn}
+
+
+\begin{rem}
+    We'll typically only need to consider Lie algebras defined over $\R$ since the Lie algebras of a matrix Lie group is, generally, only a real subspace of $M_n(\C)$. Nevertheless, it's convenient to consider vector spaces on field $\C$.
+\end{rem}
+
+\begin{defn}[Invariant Subspace]
+    If $\Pi: G \to GL(V)$ is a representation of a matrix Lie group, then a subspace $W \subset V$ is an \emph{invariant subspace} if $\Pi(M) \cdot w \in W$ for all $w \in W$ and all $M \in G$. We say this subspace is \emph{non-trivial} if $W \neq \{0\}$ and $W \neq V$.
+\end{defn}
+
+\begin{defn}[Irreducible]
+    A representation with no non-trivial invariant subspaces is called \emph{irreducible}.
+\end{defn}
+
+
+\begin{defn}[Intertwining maps]
+    Let $G$ be a matrix Lie group and let $\Pi$ be a representation of $G$ acting on a space $V$, $\Pi: G \to GL(V)$. Additionally, let $\psi$ be a representation of $G$ acting on a subspace $W$. We say that a linear map $\Phi: V \to W$ is called an \emph{intertwining map} of representations if for all $A \in G$ and $v \in V$:
+    \[\Phi(\Pi(A)v) = \psi(A) \Phi(v)\]
+\end{defn}
+
+\begin{defn}[Isomorphic representations]
+    Recall our linear map $\phi: V \to W$ from (5.6), if $\phi$ is invertible, then $\phi$ is an \emph{isomorphism of representations}. Two representations are said to be \emph{isomorphic} if there exists an isomorphism between them.
+\end{defn}
+
+The intertwining map $\Phi$ is a map requiring that $\Phi(g \cdot v) = g \cdot \Phi(v)$, which commutes with the 'action' of $G$. Our goal with these maps, and with Rep theory in general, is to find a way to classify all finite-dimensional irreducible representations of $G$ up to isomorphism. 
+\begin{rem}
+   Consider a representation $\Pi: G \to GL(V)$ of a matrix Lie group $G$. We can identity $GL(V)$ with $GL_n(\C)$ and $\mathfrak{gl}(V)$ with $\gln(\C)$ by picking a basis of $V$. We apply (4.21) to obtain a representation of $\pi: \g \to \mathfrak{gl}(V)$ such that for all $X \in \g$
+   \[\Pi(\exp(X)) = \exp(\pi(X))\]
+\end{rem} 
+
+\begin{prop}
+    Suppose $G$ is connected Lie group with Lie algebra $\g$. Suppose that $\Pi: G \to GL(V)$ is the finite-dimensional representation of $G$ and $\pi: \g \to \mathfrak{gl}(V)$ is the associated Lie algebra representation. If so, then a subspace of $W \subset V$ is invariant under the 'action' of $G$ if and only if $\pi$ is irreducible. Furthermore, two representations of $G$ are isomorphic if and only if the associated Lie algebras are isomorphic.
+
+    \begin{proof}
+        Suppose $W \subset V$ is invariant under $\pi(X)$ for all $X \in \g$, then $W$ is invariant $\pi(X)^m$ for all $m$. As $V$ is finite-dimensional, any subspace of it must also be finite-dimensional and a closed subset, making $W$ invariant under
+        \[\Pi(\exp(X)) = \exp(\pi(X)) = \sum_{n=0}^\infty \frac{\pi(X)^n}{n!}\]
+        where because $G$ is connected, by assumption, then every element of $G$ is a product of exponentials of $\g$, so $W$ is invariant under $\Pi(Y)$ for all $Y \in G$. \par 
+        Assuming $\pi$ is irreducible, then $W$ is invariant under $\Pi(Y)$ for all $Y \in G$, meaning $W$ is closed and is invariant under $\pi(X)$. We notice that $\pi(X)$ can be expressed as
+        \[\pi(X) = \lim_{h \to 0} \frac{\exp(hX) - I}{h}\]
+        for all $X \in \g$.
+        \par 
+        Now, suppose $\Pi_1$ \& $\Pi_2$ are two representations of $G$ acting on vector spaces $V_1$ and $V_2$ respectively. If $\Phi: V_1 \to V_2$ is an invertible linear map, then, by analogous argument to those we've made above, $\Phi\Pi_1(Y) = \Phi\Pi(Y)$ for all $Y \in G$
+        iff $\Phi\pi_1(X) = \pi_2(X)\Phi$ for all $X \in \g$. Thus, $\Phi$ is an isomorphism of Lie group representations iff it is an isomorphism of Lie algebra representations.
+    \end{proof}
+\end{prop}
+
+\begin{prop}
+    Suppose that $A$ \& $B$ are linear operators on a finite-dimensional vector space $V$ and let $AB = BA$. Then, for each eigenvalue $\lambda$ of $A$, the operator maps the $\lambda$-eigenspace of $A$ into itself.
+
+    \begin{proof}
+        Let $\lambda$ be an eigenvalue of $A$ and let $V_\lambda$ be the $\lambda$-eigenspace of $A$. Then for $v \in V_\lambda$ we notice that $Bv$ commutes with $A$ so that we have 
+        \[A(Bv) = B(Av) = \lambda Bv \]
+        meaning $Bv \in V_\lambda$.
+    \end{proof}
+\end{prop}
+
+\newpage 
+
+
+\section{Schur's Lemma}
+\paragraph{Now, readied with our preamble knowledge of representations and Lie algebras and groups, we now proceed onto the study of Schur's Lemma. Schur's Lemma is a simple yet extremely useful statement in the representation of Lie algebras and Lie groups. There are various reasons as to why this lemma is so significant. For one, it establishes how inequivalent irreducible representations are different from each other and how there's no way to "intertwine" them in any non-trivial manner. More relevantly, there are a number of applications where this lemma holds monstrous power in simplifying notions in other fields, such as Physics.}
+
+\begin{thm}[Schur's Lemma]
+    If $V_1$ and $V_2$ are irreducible representations of of Lie group or Lie algebra, then the following properties hold:
+    \begin{enumerate}
+        \item If $\Phi: V_1 \to V_2$ is an intertwining map, then $\Phi = 0$ or $\Phi$ is an isomorphism.
+        \item Let $V_1$ instead be an irreducible \textbf{complex} representation of a Lie group or algebra and let $\Phi: V_1 \to V_1$ by an intertwining map to itself. Then $\Phi = \lambda I$ for some $\lambda \in \C$.
+        \item Let $\Phi_1$, $\Phi_2: V_1 \to V_2$ be two non-zero intertwining maps. Then $\Phi_1 = \lambda \Phi_2$ for some $\lambda \in \C$
+    \end{enumerate}
+\end{thm}
+Before providing proof of Schur's lemma, we proceed in establishing two resulting corollaries of this theorem.
+
+\begin{cor}
+Let $\Pi: G \to GL(V)$ be an irreducible complex representation of a Lie group $G$. If $A$ is in the center of $G$, then $\Pi(A) = \lambda I$ for some $\lambda \in \C$.
+\end{cor}
+
+\begin{proof}
+    If $A$ is in the center of $G$, then for all $B \in G$, 
+    \[\Pi(A)\Pi(B) = \Pi(AB) = \Pi(BA) = \Pi(B) \Pi(A)\]
+    where this indicates $\Pi(A)$ is the intertwining map of the space with itself. Thus, by Schur's Lemma (2), $\Pi(A)$ is the identity of $G$.
+\end{proof}
+
+\begin{rem}
+    Similarly, if $\pi$ is an irreducible complex representation of a Lie algebra $\g$, then if $X$ is the center of $\g$, $\pi(X) = \lambda I$. The proof of this statement is similar to the one above.
+\end{rem}
+
+\begin{cor}
+    An irreducible complex representation of a commutative group or Lie algebra is one dimensional.
+\end{cor}
+\begin{proof}
+    If a group $G$ is commutative, then the center of $G$ is all of $G$, so by (6.2), $\Pi(A)$ is the multiple of the identity for all $A \in G$, telling us that $\dim(\Pi) = 1$. The proof for Lie algebras is similar in nature.
+\end{proof}
+
+
+
+\subsection{Proof of Schur's Lemma.}
+\begin{proof}
+    It is clear to see that $\ker \Phi $ is an invariant space of $V_1$. Notice that as $V_1$ is irreducible, this tells us that $\ker \Phi = V_1$, in which case, $\Phi = 0$ or $\ker \Phi = \{0\}$. If $\Phi \neq 0$,  then $\ker \Phi = \{0\}$. As such, then the image of $\Phi$ is not $0$ and invariant, so it is all of $V_2$. Thus, if $\Phi$ is not zero, it is both injective and surjective.
+    \par 
+    Suppose $\Phi: V_1 \to V_1$ is an intertwining map on a complex representation of a Lie group or algebra $V_1$. As this is an intertwining map to itself, then for representation $\Pi: G \to GL(V_1)$, we have $\Phi(\Pi(A)) = \Pi(A)\Phi$ for all $A \in G$, where this has at least one eigenvalue $\lambda \in \C$. Letting $U$ denote the corresponding Eigenspace for $\Phi$, then by (5.10), each $\Pi(A)$ maps $U$ to itself, meaning that $U$ is an invariant subspace. Since $U \neq 0$, we must have $U = V_1$, telling us that $\Phi = \lambda I$ on all of $V_1$.
+
+    \par 
+    Now, for Property (3), if $\phi_2 \neq 0$, then by Property (1), $\phi_2$ is an isomorphism. This shows that $\phi_1 \circ \phi_2^{-1}$ is an intertwining map of $V_2$ with itself, meaning, by Property (2), that $\phi_1 \circ \phi_2^{-1} =  \lambda I $. Thus, $\phi_1 = \lambda \phi_2$.
+\end{proof}
+
+\newpage 
+
+\section{Addendum: Spherical Harmonics on SO(3)}
+\paragraph{The group $SO(3)$ denotes the group of $3 \times 3$ special orthogonal matrices over $\R$. This group is otherwise known as the rotational group and, as you may imagine, plays a profound role in physics, particularly in dealing with particle symmetries and spin interactions. We discuss and define the concept of "Spherical Harmonics" as it relates to this group and its representations of complex-vector spaces.}
+
+\paragraph{Ultimately, the first question to ask is what are the irreducible representations $\pi$ of SO(3)}?
+
+\[\pi: SO(3) \to GL_n(\C)\]
+
+Perhaps one of the most immediate ones that we can spot is $$\pi_1: SO(3) \to GL_1(\C)$$
+where this denotes the trivial representation so that for $M \in SO(3)$, $\pi_1(M) = 1$. This representation is 1-dimensional and ultimately somewhat uninteresting in the conversation of $SO(3)$, so lets head over to a more interesting space that $SO(3)$ acts on.
+
+\begin{center}
+    \begin{tikzpicture}[scale=2]
+% Axes
+\draw[->] (0,0)--(1.2,0) node[right] {$y$};
+\draw[->] (0,0)--(0,1.2) node[above] {$z$};
+\draw[->] (0,0)--(-.75,-.5) node[below left] {$x$};
+% Vector and label node
+\draw[->] (0,0)--(.5,0.866);
+\draw (.4,.5) node {${\mathbf v}$};
+\draw (0,0) circle(1);
+\draw plot[domain=pi:2*pi] ({cos(\x r)},{.2*sin(\x r)});
+\draw[dashed] plot[domain=0:pi] ({cos(\x r)},{.2*sin(\x r)});
+\end{tikzpicture}
+\end{center}
+
+$SO(3)$ acts most naturally on the space of the 2-sphere, $\mathbb{S}^2$, 
+\[\mathbb{S}^2 := \{ (x,y,z) \mid x^2 + y^2 + z^2 = 1 \},\]
+ where for any $M \in SO(3)$ and $\vec v \in \mathbb{S}^2$, $M\vec v$ is just the action of the matrix $M$ on vector $\vec v$.
+ \par 
+ Now, let's denote the complex functions from $\mathbb{S}^2 $ to $\C$ as functions $f: \mathbb{S}^2 \to \C$ where these functions comprise the set $L(S^2)$. You'll have to take my word for it, but this set is, in fact, a complex-valued infinite dimensional vector space. 
+
+ \begin{rem}
+     Although most of our definitions and machinery are only in the application of finite-dimensional vector spaces, we're working from the POV of physicists, so, frankly, this is of little concern for us.
+ \end{rem}
+
+ We wish to find a representation of $SO(3)$ that acts on $L(S^2)$, ie.
+ \[\varphi: SO(3) \to GL(L(S^2)), \ (\varphi(M)f)(\vec v) = f M^{-1} \vec v\]
+
+ However, how could we ever hope to decompose this complex representation of $SO(3)$ into irreducible representations? Coincidentally, this can be decomposed into a direct sum such that each irreducible rep of $SO(3)$ appears exactly one time.
+ \[\varphi = \bigoplus_{i=0}^\infty \varphi_i\]
+ Now, how exactly does this happen? Well, as it turns out, we require functions on the $2$-sphere that don't change after being rotated. Well, the only functions that satisfy this are the constant functions. As this is the case, then by \textbf{Schur's Lemma} and Corollary (6.4), we find that the constant functions on $\mathbb{S}^2$ form a one-dimensional vector space. 
+ \par As it turns out, these irreducible representations that we found are Spherical harmonics! Since these functions comprise the basis of $L(S^2)$, each function $f \in \mathbb{S}^2$ can be rewritten as:
+ \[f(\theta, \phi) = \sum_{k=0}^\infty \sum_{i = -k}^k a_{i,k} Y_k^i (\theta, \phi) 
+ \ \text{ for a choice of constants $a_{ik} \in \C$}\]
+
+
+
+    
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{thebibliography}{9}
+\bibitem{Adam}
+Adams, F. Lectures on Lie Groups. W.A. Benjamin. New York, 1969.
+
+\bibitem{Affine}
+Carter, R. Lie Algebras of Finite \& Affine Type. Cambridge Studies in Advanced Mathematics, 2005.
+
+\bibitem{Hall}
+
+Hall, B. Lie Groups, Lie Algebras, and Representations - An Elementary Introduction. Volume 222, Graduate Texts in Mathematics, Springer. 2015.
+
+
+
+\bibitem{Stillwell} 
+Stillwell, J. Naive Lie Theory. Undergraduate Texts in Mathematics. Springer, 2010.
+
+\end{thebibliography}
+
+\end{document}
+
